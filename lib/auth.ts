@@ -4,7 +4,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import prisma from "./prisma";
 import bcrypt from "bcryptjs";
 
-export const { handlers, auth, signIn, signOut } = NextAuth({
+export default NextAuth({
   adapter: PrismaAdapter(prisma),
   providers: [
     CredentialsProvider({
@@ -53,6 +53,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   callbacks: {
+    // return jwt token after login
+    async signIn({ user, account, profile }) {
+      if (account?.provider === "credentials") {
+        return true;
+      }
+      return false;
+    },
     async jwt({ token, user }) {
       if (user) {
         console.log(token);
@@ -64,7 +71,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
     async session({ session, token }) {
       if (token) {
-        console.log(token);
+        console.log(session);
         // session.user.id = token.id!;
         session.user.name = token.name!;
         session.user.email = token.email!;
@@ -72,4 +79,5 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       return session;
     },
   },
+  secret: "testest",
 });
